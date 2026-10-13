@@ -76,24 +76,34 @@ namespace GoodTimeStudio.MyPhone.Pages
             }
         }
 
-        [RelayCommand]
-        public async Task Call()
-        {
-            Debug.Assert(App.Current.DeviceManager != null);
-            var deviceManager = App.Current.DeviceManager;
+   
+[RelayCommand]
+public async Task Call()
+{
+    try
+    {
+        var deviceManager = App.Current.DeviceManager;
 
-            if (PhoneNumber != null)
-            {
-                if (deviceManager.CallService != null)
-                {
-                    await deviceManager.CallService.CallAsync(PhoneNumber);
-                }
-                else
-                {
-                    // TODO: what if CallService is not available 
-                }
-            }
-        }
+        if (deviceManager?.CallService == null)
+            throw new InvalidOperationException(
+                "Service d'appel Bluetooth indisponible.");
+
+        if (string.IsNullOrWhiteSpace(PhoneNumber))
+            return;
+
+        await deviceManager.CallService.CallAsync(PhoneNumber);
+    }
+    catch (Exception ex)
+    {
+        System.IO.File.WriteAllText(
+            System.IO.Path.Combine(
+                System.Environment.GetFolderPath(
+                    System.Environment.SpecialFolder.LocalApplicationData),
+                "MyPhone-call-error.txt"),
+            ex.ToString());
+    }
+}
+
 
     }
 }
